@@ -1,0 +1,221 @@
+{
+  "uuid": "717e6d1c-3e45-4bcf-9b48-4b67f557fec1",
+  "lastMigration": 33,
+  "name": "InverSync",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3002,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "f7620385-8983-4480-82c3-8bc1eb086e65",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "",
+      "responses": [
+        {
+          "uuid": "b6fbd277-5116-4df3-bbb4-7417df62900d",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "354c8a9b-327e-49cb-845f-3a1fc0f127a0",
+      "type": "crud",
+      "documentation": "",
+      "method": "",
+      "endpoint": "mercados",
+      "responses": [
+        {
+          "uuid": "09135bad-56e6-47e2-8f82-5389df9b4cbf",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "llfy",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "6cf925c3-ef61-44ab-86b5-74d66581583d",
+      "type": "crud",
+      "documentation": "",
+      "method": "",
+      "endpoint": "prestamos",
+      "responses": [
+        {
+          "uuid": "cda445f5-2d37-4638-b1d8-e4bade9640b7",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "mzkq",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "94de5891-5745-4bc8-8c24-7f26b8b63a00",
+      "type": "crud",
+      "documentation": "",
+      "method": "",
+      "endpoint": "bienes",
+      "responses": [
+        {
+          "uuid": "d0580842-f9fd-43de-b4b5-b5c86e7204a8",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "DATABUCKET",
+          "filePath": "",
+          "databucketID": "gied",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "f7620385-8983-4480-82c3-8bc1eb086e65"
+    },
+    {
+      "type": "route",
+      "uuid": "354c8a9b-327e-49cb-845f-3a1fc0f127a0"
+    },
+    {
+      "type": "route",
+      "uuid": "6cf925c3-ef61-44ab-86b5-74d66581583d"
+    },
+    {
+      "type": "route",
+      "uuid": "94de5891-5745-4bc8-8c24-7f26b8b63a00"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": [
+    {
+      "uuid": "b028ae06-a23e-4b10-adac-606398409c34",
+      "id": "llfy",
+      "name": "mercados",
+      "documentation": "",
+      "value": "[\r\n  {\r\n    \"name\": \"Bitcoin\",\r\n    \"ticker\": \"BTC\",\r\n    \"quantity\": 0.35,\r\n    \"price\": 62450.00,\r\n    \"changePercent\": 3.82,\r\n    \"icon\": \"currency_bitcoin_rounded\",\r\n    \"currency\": \"USD\"\r\n  },\r\n  {\r\n    \"name\": \"Ecopetrol\",\r\n    \"ticker\": \"ECO.CB\",\r\n    \"quantity\": 150,\r\n    \"price\": 2340.00,\r\n    \"changePercent\": -1.15,\r\n    \"icon\": \"local_gas_station_rounded\",\r\n    \"currency\": \"COP\"\r\n  },\r\n  {\r\n    \"name\": \"Alibaba\",\r\n    \"ticker\": \"BABA\",\r\n    \"quantity\": 20,\r\n    \"price\": 78.45,\r\n    \"changePercent\": 0.67,\r\n    \"icon\": \"shopping_bag_outlined\",\r\n    \"currency\": \"USD\"\r\n  },\r\n  {\r\n    \"name\": \"Ethereum\",\r\n    \"ticker\": \"ETH\",\r\n    \"quantity\": 2.5,\r\n    \"price\": 3120.00,\r\n    \"changePercent\": 2.14,\r\n    \"icon\": \"diamond_outlined\",\r\n    \"currency\": \"USD\"\r\n  },\r\n  {\r\n    \"name\": \"Bancolombia\",\r\n    \"ticker\": \"BIC\",\r\n    \"quantity\": 80,\r\n    \"price\": 32100.00,\r\n    \"changePercent\": -0.43,\r\n    \"icon\": \"account_balance_rounded\",\r\n    \"currency\": \"COP\"\r\n  },\r\n  {\r\n    \"name\": \"Tencent\",\r\n    \"ticker\": \"TCEHY\",\r\n    \"quantity\": 35,\r\n    \"price\": 42.10,\r\n    \"changePercent\": 1.29,\r\n    \"icon\": \"games_outlined\",\r\n    \"currency\": \"USD\"\r\n  }\r\n]"
+    },
+    {
+      "uuid": "ae765d0a-4f0e-4609-bfc5-115228c9f203",
+      "id": "mzkq",
+      "name": "prestamos",
+      "documentation": "",
+      "value": "[\r\n  {\r\n    \"label\": \"Prestamo Tio Carlos\",\r\n    \"borrower\": \"Carlos Gutierrez\",\r\n    \"amount\": 100000,\r\n    \"monthlyRate\": 2.0,\r\n    \"monthsElapsed\": 3,\r\n    \"icon\": \"person_outline_rounded\"\r\n  },\r\n  {\r\n    \"label\": \"Prestamo Vecino Juan\",\r\n    \"borrower\": \"Juan Perez\",\r\n    \"amount\": 250000,\r\n    \"monthlyRate\": 1.5,\r\n    \"monthsElapsed\": 5,\r\n    \"icon\": \"handshake_outlined\"\r\n  },\r\n  {\r\n    \"label\": \"Prestamo Amiga Sofia\",\r\n    \"borrower\": \"Sofia Ramirez\",\r\n    \"amount\": 50000,\r\n    \"monthlyRate\": 0,\r\n    \"monthsElapsed\": 1,\r\n    \"icon\": \"favorite_border_rounded\"\r\n  }\r\n]"
+    },
+    {
+      "uuid": "d1c5d59c-9e53-4a5c-9e25-409b9014827e",
+      "id": "gied",
+      "name": "bienes",
+      "documentation": "",
+      "value": "[\r\n  {\r\n    \"name\": \"Moto TVS 200\",\r\n    \"category\": \"Vehiculo\",\r\n    \"estimatedValue\": 6500000,\r\n    \"acquisitionValue\": 8200000,\r\n    \"icon\": \"two_wheeler_rounded\"\r\n  },\r\n  {\r\n    \"name\": \"Lote Afueras\",\r\n    \"category\": \"Finca Raiz\",\r\n    \"estimatedValue\": 45000000,\r\n    \"acquisitionValue\": 30000000,\r\n    \"icon\": \"landscape_rounded\"\r\n  },\r\n  {\r\n    \"name\": \"Computador Setup\",\r\n    \"category\": \"Tecnologia\",\r\n    \"estimatedValue\": 4200000,\r\n    \"acquisitionValue\": 5800000,\r\n    \"icon\": \"computer_rounded\"\r\n  }\r\n]"
+    }
+  ],
+  "callbacks": []
+}
