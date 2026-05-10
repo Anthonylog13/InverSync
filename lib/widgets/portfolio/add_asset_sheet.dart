@@ -17,11 +17,14 @@ class AddAssetSheet extends StatefulWidget {
 
 class _AddAssetSheetState extends State<AddAssetSheet> {
   String _assetType = 'Accion/Cripto';
-  final _field1Controller = TextEditingController(); 
-  final _field2Controller = TextEditingController(); 
-  final _rateController = TextEditingController();   
-  final _monthsController = TextEditingController(); 
+  final _field1Controller = TextEditingController();
+  final _field2Controller = TextEditingController();
+  final _rateController = TextEditingController();
+  final _monthsController = TextEditingController();
+  final _paymentDayController = TextEditingController();
+  final _rentDayController = TextEditingController();
   String _currency = 'COP';
+  bool _hasRent = false;
   bool _isSaving = false;
 
   static const _assetTypes = ['Accion/Cripto', 'Prestamo P2P', 'Bien Fisico'];
@@ -32,6 +35,8 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     _field2Controller.dispose();
     _rateController.dispose();
     _monthsController.dispose();
+    _paymentDayController.dispose();
+    _rentDayController.dispose();
     super.dispose();
   }
 
@@ -73,6 +78,8 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     final f2 = double.tryParse(_field2Controller.text.trim()) ?? 0.0;
     final monthlyRate = double.tryParse(_rateController.text.trim()) ?? 0.0;
     final monthsElapsed = int.tryParse(_monthsController.text.trim()) ?? 0;
+    final paymentDay = int.tryParse(_paymentDayController.text.trim());
+    final rentDay = int.tryParse(_rentDayController.text.trim());
     switch (_assetType) {
       case 'Prestamo P2P':
         return LoanAsset(
@@ -82,6 +89,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           monthlyRate: monthlyRate,
           monthsElapsed: monthsElapsed,
           iconKey: 'person_outline_rounded',
+          paymentDay: paymentDay,
         ).toJson();
       case 'Bien Fisico':
         return PhysicalAsset(
@@ -90,6 +98,8 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           estimatedValue: f2,
           acquisitionValue: f2,
           iconKey: 'help_outline_rounded',
+          hasRent: _hasRent,
+          rentPaymentDay: _hasRent ? rentDay : null,
         ).toJson();
       default:
         return MarketAsset(
@@ -220,6 +230,34 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            SheetField(
+              controller: _paymentDayController,
+              label: 'Día de pago (1-31)',
+              hint: 'Ej. 15',
+              icon: Icons.event_rounded,
+              keyboardType: TextInputType.number,
+            ),
+          ],
+          if (_assetType == 'Bien Fisico') ...[  
+            const SizedBox(height: 14),
+            _RentToggle(
+              value: _hasRent,
+              onChanged: (v) => setState(() {
+                _hasRent = v;
+                if (!v) _rentDayController.clear();
+              }),
+            ),
+            if (_hasRent) ...[  
+              const SizedBox(height: 14),
+              SheetField(
+                controller: _rentDayController,
+                label: 'Día de cobro arriendo (1-31)',
+                hint: 'Ej. 5',
+                icon: Icons.event_available_rounded,
+                keyboardType: TextInputType.number,
+              ),
+            ],
           ],
           const SizedBox(height: 14),
           DropdownField(
@@ -246,6 +284,45 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
                     )
                   : const Text('Guardar Activo'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Toggle de arriendo ────────────────────────────────────────────────────────
+
+class _RentToggle extends StatelessWidget {
+  const _RentToggle({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.home_work_outlined,
+              color: AppColors.textSecondary, size: 20),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              '¿Genera arriendo?',
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppColors.primary,
           ),
         ],
       ),

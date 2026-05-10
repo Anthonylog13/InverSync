@@ -3,17 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../models/asset_models.dart';
 import '../../models/movement_model.dart';
 import '../../services/firestore_service.dart';
+import '../../services/market_data_service.dart';
 import 'portfolio_event.dart';
 import 'portfolio_state.dart';
 
 /// BLoC central de portafolio.
 ///
 /// SOLID — Inversión de Dependencias:
-/// [FirestoreService] se inyecta por constructor; el BLoC nunca instancia
-/// colaboradores directamente.
+/// [FirestoreService] y [MarketDataService] se inyectan por constructor.
 class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
-  PortfolioBloc({required FirestoreService firestoreService})
-      : _firestore = firestoreService,
+  PortfolioBloc({
+    required FirestoreService firestoreService,
+    required MarketDataService marketDataService,
+  })  : _firestore = firestoreService,
+        _market = marketDataService,
         super(const PortfolioInitial()) {
     on<LoadPortfolioData>(_onLoad);
     on<AddAssetEvent>(_onAddAsset);
@@ -21,12 +24,14 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
   }
 
   final FirestoreService _firestore;
+  final MarketDataService _market;
 
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
-  /// Carga todas las listas en paralelo desde Firestore y emite [PortfolioLoaded].
+  /// Carga todas las listas en paralelo desde Firestore, enriquece los precios
+  /// de mercado con Yahoo Finance y emite [PortfolioLoaded].
   Future<void> _onLoad(
     LoadPortfolioData event,
     Emitter<PortfolioState> emit,
@@ -45,8 +50,23 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
         _firestore.getMovements(event.uid).then((v) => movementsJson = v),
       ]);
 
+      // Construir lista base desde Firestore
+      final List<MarketAsset> baseMarkets =
+          marketsJson.map(MarketAsset.fromJson).toList();
+
+      // Obtener tickers únicos y enriquecer con precios en vivo
+      final tickers =
+          baseMarkets.map((a) => a.ticker).toSet().toList();
+      final Map<String, double> livePrices =
+          await _market.fetchLivePrices(tickers);
+
+      final List<MarketAsset> enrichedMarkets = baseMarkets.map((asset) {
+        final livePrice = livePrices[asset.ticker];
+        return livePrice != null ? asset.copyWith(price: livePrice) : asset;
+      }).toList();
+
       emit(PortfolioLoaded(
-        markets: marketsJson.map(MarketAsset.fromJson).toList(),
+        markets: enrichedMarkets,
         loans: loansJson.map(LoanAsset.fromJson).toList(),
         physicals: physicalsJson.map(PhysicalAsset.fromJson).toList(),
         movements: movementsJson.map(Movement.fromJson).toList(),

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,8 +17,13 @@ class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
 
+  static const _webClientId =
+      '943067865641-ph404j5rt5bl9r5kh3l4messnldheclg.apps.googleusercontent.com';
+
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? _webClientId : null,
+  );
   final LocalAuthentication _localAuth = LocalAuthentication();
 
   // ---------------------------------------------------------------------------

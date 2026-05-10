@@ -6,6 +6,7 @@ import '../../blocs/portfolio/portfolio_bloc.dart';
 import '../../blocs/portfolio/portfolio_event.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../calendar/calendar_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../login/login_screen.dart';
 import '../movements/movements_screen.dart';
@@ -25,7 +26,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     PortfolioScreen(),
-    _PlaceholderScreen(label: 'Calendario'),
+    CalendarScreen(),
     MovementsScreen(),
   ];
 
@@ -91,26 +92,42 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 class _AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL;
+
     return Drawer(
       child: Column(
         children: [
-   
           UserAccountsDrawerHeader(
             decoration: const BoxDecoration(color: AppColors.surfaceVariant),
-            accountName: const Text(
-              'Usuario InverSync',
-              style: TextStyle(
+            accountName: Text(
+              user?.displayName ?? 'Usuario InverSync',
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            accountEmail: const Text(
-              'usuario@inversync.com',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            accountEmail: Text(
+              user?.email ?? 'correo@inversync.com',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: AppColors.primary.withAlpha(40),
-              child: const Icon(Icons.person, color: AppColors.primary, size: 32),
+              backgroundImage:
+                  photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? Text(
+                      _initials(user?.displayName),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                      ),
+                    )
+                  : null,
             ),
           ),
           _DrawerItem(
@@ -150,6 +167,15 @@ class _AppDrawer extends StatelessWidget {
       ),
     );
   }
+
+  /// Extrae las iniciales del nombre (ej. "Anthony Arango" → "AA").
+  /// Si no hay nombre, devuelve el ícono por defecto vía null.
+  String _initials(String? displayName) {
+    if (displayName == null || displayName.trim().isEmpty) return '?';
+    final parts = displayName.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
 }
 
 class _DrawerItem extends StatelessWidget {
@@ -176,27 +202,3 @@ class _DrawerItem extends StatelessWidget {
     );
   }
 }
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.construction_rounded, color: AppColors.textDisabled, size: 48),
-          const SizedBox(height: 12),
-          Text(
-            '$label — Próximamente',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-

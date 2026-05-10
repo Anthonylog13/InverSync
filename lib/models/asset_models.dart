@@ -48,6 +48,26 @@ class MarketAsset {
 
   IconData get icon => IconMapper.fromString(iconKey);
 
+  /// Clona el activo reemplazando solo los campos indicados.
+  MarketAsset copyWith({
+    String? name,
+    String? ticker,
+    double? quantity,
+    double? price,
+    double? changePercent,
+    String? iconKey,
+    String? currency,
+  }) =>
+      MarketAsset(
+        name: name ?? this.name,
+        ticker: ticker ?? this.ticker,
+        quantity: quantity ?? this.quantity,
+        price: price ?? this.price,
+        changePercent: changePercent ?? this.changePercent,
+        iconKey: iconKey ?? this.iconKey,
+        currency: currency ?? this.currency,
+      );
+
   factory MarketAsset.fromJson(Map<String, dynamic> json) => MarketAsset(
         name: json['name'] as String,
         ticker: json['ticker'] as String,
@@ -77,6 +97,7 @@ class LoanAsset {
     required this.monthlyRate,
     required this.monthsElapsed,
     required this.iconKey,
+    this.paymentDay,
   });
 
   final String label;
@@ -85,6 +106,9 @@ class LoanAsset {
   final double monthlyRate;
   final int monthsElapsed;
   final String iconKey;
+
+  /// Día del mes (1–31) en que se cobra la cuota. Nulo si no está definido.
+  final int? paymentDay;
 
   IconData get icon => IconMapper.fromString(iconKey);
 
@@ -95,6 +119,7 @@ class LoanAsset {
         monthlyRate: (json['monthlyRate'] as num).toDouble(),
         monthsElapsed: json['monthsElapsed'] as int,
         iconKey: json['icon'] as String,
+        paymentDay: (json['paymentDay'] as num?)?.toInt(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -104,6 +129,7 @@ class LoanAsset {
         'monthlyRate': monthlyRate,
         'monthsElapsed': monthsElapsed,
         'icon': iconKey,
+        if (paymentDay != null) 'paymentDay': paymentDay,
       };
 }
 
@@ -115,6 +141,8 @@ class PhysicalAsset {
     required this.estimatedValue,
     required this.acquisitionValue,
     required this.iconKey,
+    this.hasRent = false,
+    this.rentPaymentDay,
   });
 
   final String name;
@@ -122,6 +150,12 @@ class PhysicalAsset {
   final double estimatedValue;
   final double acquisitionValue;
   final String iconKey;
+
+  /// Indica si el bien genera ingreso por arriendo.
+  final bool hasRent;
+
+  /// Día del mes (1–31) en que se cobra el arriendo. Nulo si [hasRent] es false.
+  final int? rentPaymentDay;
 
   IconData get icon => IconMapper.fromString(iconKey);
 
@@ -131,6 +165,8 @@ class PhysicalAsset {
         estimatedValue: (json['estimatedValue'] as num).toDouble(),
         acquisitionValue: (json['acquisitionValue'] as num).toDouble(),
         iconKey: json['icon'] as String,
+        hasRent: (json['hasRent'] as bool?) ?? false,
+        rentPaymentDay: (json['rentPaymentDay'] as num?)?.toInt(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -139,5 +175,7 @@ class PhysicalAsset {
         'estimatedValue': estimatedValue,
         'acquisitionValue': acquisitionValue,
         'icon': iconKey,
+        'hasRent': hasRent,
+        if (rentPaymentDay != null) 'rentPaymentDay': rentPaymentDay,
       };
 }

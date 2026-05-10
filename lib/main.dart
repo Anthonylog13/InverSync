@@ -9,6 +9,7 @@ import 'screens/biometric_auth/biometric_auth_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/main_layout/main_layout_screen.dart';
 import 'services/firestore_service.dart';
+import 'services/market_data_service.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
@@ -50,14 +51,15 @@ class InverSyncApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider(
-      // FirestoreService disponible para cualquier BLoC o widget descendiente
-      create: (_) => FirestoreService(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(create: (_) => FirestoreService()),
+        RepositoryProvider(create: (_) => MarketDataService()),
+      ],
       child: BlocProvider(
-        // PortfolioBloc recibe FirestoreService por DI.
-        // La carga se dispara desde MainLayoutScreen cuando se conoce el UID.
         create: (ctx) => PortfolioBloc(
           firestoreService: ctx.read<FirestoreService>(),
+          marketDataService: ctx.read<MarketDataService>(),
         ),
         child: MaterialApp(
           title: 'InverSync',
