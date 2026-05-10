@@ -1,8 +1,10 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
+import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../providers/portfolio_provider.dart';
 import '../../widgets/portfolio/add_asset_sheet.dart';
 import '../../widgets/portfolio/loans_tab.dart';
 import '../../widgets/portfolio/markets_tab.dart';
@@ -24,8 +26,14 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // El BLoC ya lanzó LoadPortfolioData en main.dart al ser creado.
+    // Sólo relanzamos si el estado actual es el inicial (primera navegación
+    // a esta pantalla antes de que el BLoC responda).
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PortfolioProvider>().loadAllData();
+      final bloc = context.read<PortfolioBloc>();
+      if (bloc.state.runtimeType == PortfolioInitial) {
+        bloc.add(const LoadPortfolioData());
+      }
     });
   }
 

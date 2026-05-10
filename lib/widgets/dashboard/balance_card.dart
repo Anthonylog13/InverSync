@@ -1,18 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
 import '../../core/theme/app_theme.dart';
 
 class BalanceCard extends StatelessWidget {
   const BalanceCard({
     super.key,
-    required this.balance,
-    required this.inCOP,
-    required this.onToggleCurrency,
+    required this.totalBalance,
+    required this.isCopCurrency,
   });
 
-  final String balance;
-  final bool inCOP;
-  final VoidCallback onToggleCurrency;
+  /// Balance total en USD proveniente del estado [PortfolioLoaded].
+  final double totalBalance;
+
+  /// Si es true, el balance se muestra en COP; de lo contrario en USD.
+  final bool isCopCurrency;
+
+  static const double _usdToCop = 4200;
+
+  String get _displayBalance {
+    if (isCopCurrency) {
+      return '\$ ${_fmt(totalBalance * _usdToCop)} COP';
+    }
+    return '\$ ${_fmt(totalBalance)} USD';
+  }
+
+  static String _fmt(double n) {
+    final parts = n.toStringAsFixed(2).split('.');
+    final intPart = parts[0].replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+$)'),
+      (m) => '${m[1]},',
+    );
+    return '$intPart.${parts[1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +54,11 @@ class BalanceCard extends StatelessWidget {
             children: [
               Text('Portafolio total',
                   style: Theme.of(context).textTheme.bodyMedium),
+              // Toggle: despacha ToggleCurrencyEvent al BLoC
               GestureDetector(
-                onTap: onToggleCurrency,
+                onTap: () => context
+                    .read<PortfolioBloc>()
+                    .add(const ToggleCurrencyEvent()),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -44,8 +69,8 @@ class BalanceCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      _CurrencyChip(label: 'USD', active: !inCOP),
-                      _CurrencyChip(label: 'COP', active: inCOP),
+                      _CurrencyChip(label: 'USD', active: !isCopCurrency),
+                      _CurrencyChip(label: 'COP', active: isCopCurrency),
                     ],
                   ),
                 ),
@@ -54,7 +79,7 @@ class BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            balance,
+            _displayBalance,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontSize: 34,
                   letterSpacing: -1.5,
@@ -73,10 +98,10 @@ class BalanceCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
               ),
-              if (inCOP) ...[
+              if (isCopCurrency) ...[
                 const SizedBox(width: 8),
                 Text(
-                  '≈ TRM \$4,200',
+                  '≈ TRM \$${_fmt(_usdToCop)}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: AppColors.textDisabled,
                       ),

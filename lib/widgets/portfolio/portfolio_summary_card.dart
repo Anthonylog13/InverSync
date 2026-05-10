@@ -1,42 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../providers/portfolio_provider.dart';
 
 class PortfolioSummary extends StatelessWidget {
   const PortfolioSummary({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PortfolioProvider>();
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SummaryItem(
-            label: 'Activos',
-            value: '${provider.markets.length + provider.physicals.length}',
+    return BlocBuilder<PortfolioBloc, PortfolioState>(
+      builder: (context, state) {
+        final markets = state is PortfolioLoaded ? state.markets.length : 0;
+        final physicals = state is PortfolioLoaded ? state.physicals.length : 0;
+        final loans = state is PortfolioLoaded ? state.loans.length : 0;
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
-          SummaryItem(
-            label: 'Prestamos',
-            value: '${provider.loans.length}',
-            valueColor: AppColors.warning,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SummaryItem(
+                label: 'Activos',
+                value: '${markets + physicals}',
+              ),
+              SummaryItem(
+                label: 'Prestamos',
+                value: '$loans',
+                valueColor: AppColors.warning,
+              ),
+              const SummaryItem(
+                label: 'Rentabilidad',
+                value: '+8.43%',
+                valueColor: AppColors.positive,
+              ),
+            ],
           ),
-          const SummaryItem(
-            label: 'Rentabilidad',
-            value: '+8.43%',
-            valueColor: AppColors.positive,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

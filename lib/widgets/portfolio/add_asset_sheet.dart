@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
-import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class AddAssetSheet extends StatefulWidget {
@@ -66,7 +68,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     }
   }
 
-  dynamic _buildAsset() {
+  Map<String, dynamic> _buildAssetData() {
     final f1 = _field1Controller.text.trim();
     final f2 = double.tryParse(_field2Controller.text.trim()) ?? 0.0;
     final monthlyRate = double.tryParse(_rateController.text.trim()) ?? 0.0;
@@ -80,7 +82,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           monthlyRate: monthlyRate,
           monthsElapsed: monthsElapsed,
           iconKey: 'person_outline_rounded',
-        );
+        ).toJson();
       case 'Bien Fisico':
         return PhysicalAsset(
           name: f1,
@@ -88,7 +90,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           estimatedValue: f2,
           acquisitionValue: f2,
           iconKey: 'help_outline_rounded',
-        );
+        ).toJson();
       default:
         return MarketAsset(
           name: f1,
@@ -98,25 +100,28 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           changePercent: 0.0,
           iconKey: 'help_outline_rounded',
           currency: _currency,
-        );
+        ).toJson();
     }
   }
 
-
   Future<void> _save() async {
     if (_field1Controller.text.trim().isEmpty) return;
+
     setState(() => _isSaving = true);
+
     try {
-      final provider = context.read<PortfolioProvider>();
-      final asset = _buildAsset();
-      switch (_assetType) {
-        case 'Prestamo P2P':
-          await provider.addLoan(asset as LoanAsset);
-        case 'Bien Fisico':
-          await provider.addPhysical(asset as PhysicalAsset);
-        default:
-          await provider.addMarket(asset as MarketAsset);
-      }
+      // Despacha el evento; el BLoC maneja la persistencia y el Optimistic Update
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      context.read<PortfolioBloc>().add(
+            AddAssetEvent(
+              uid: uid,
+              type: _assetType,
+              assetData: _buildAssetData(),
+            ),
+          );
+
+      // Escuchamos un único cambio de estado para detectar error del BLoC
+      // vía BlocListener en el árbol padre; aquí cerramos el sheet directamente.
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

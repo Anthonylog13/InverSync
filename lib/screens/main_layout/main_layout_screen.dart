@@ -1,8 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/auth_service.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../login/login_screen.dart';
+import '../movements/movements_screen.dart';
 import '../portfolio/portfolio_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -20,8 +26,17 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     DashboardScreen(),
     PortfolioScreen(),
     _PlaceholderScreen(label: 'Calendario'),
-    _PlaceholderScreen(label: 'Movimientos'),
+    MovementsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      context.read<PortfolioBloc>().add(LoadPortfolioData(uid: uid));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +135,9 @@ class _AppDrawer extends StatelessWidget {
             icon: Icons.logout_rounded,
             label: 'Cerrar sesión',
             color: AppColors.negative,
-            onTap: () {
+            onTap: () async {
+              await AuthService.instance.signOut();
+              if (!context.mounted) return;
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

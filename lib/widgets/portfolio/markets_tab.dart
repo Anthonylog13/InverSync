@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
-import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class MarketsTab extends StatelessWidget {
@@ -11,24 +12,52 @@ class MarketsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PortfolioProvider>();
-    if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
-      itemCount: provider.markets.length,
-      itemBuilder: (context, i) => MarketCard(asset: provider.markets[i]),
+    return BlocBuilder<PortfolioBloc, PortfolioState>(
+      builder: (context, state) {
+        if (state is PortfolioLoading || state is PortfolioInitial) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+        if (state is PortfolioError) {
+          return Center(
+            child: Text(
+              'Error: ${state.message}',
+              style: const TextStyle(color: AppColors.negative),
+            ),
+          );
+        }
+        if (state is PortfolioLoaded) {
+          if (state.markets.isEmpty) {
+            return const Center(
+              child: Text(
+                'Sin activos de mercado',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
+            itemCount: state.markets.length,
+            itemBuilder: (context, i) =>
+                MarketCard(asset: state.markets[i], isCopCurrency: state.isCopCurrency),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
 
 class MarketCard extends StatelessWidget {
-  const MarketCard({super.key, required this.asset});
+  const MarketCard({
+    super.key,
+    required this.asset,
+    this.isCopCurrency = true,
+  });
 
   final MarketAsset asset;
+  final bool isCopCurrency;
 
   static const double _usdToCop = 4200;
 

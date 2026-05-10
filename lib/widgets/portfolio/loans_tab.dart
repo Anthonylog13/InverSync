@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
-import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class LoansTab extends StatelessWidget {
@@ -11,16 +12,38 @@ class LoansTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PortfolioProvider>();
-    if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
-      itemCount: provider.loans.length,
-      itemBuilder: (context, i) => LoanCard(loan: provider.loans[i]),
+    return BlocBuilder<PortfolioBloc, PortfolioState>(
+      builder: (context, state) {
+        if (state is PortfolioLoading || state is PortfolioInitial) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+        if (state is PortfolioError) {
+          return Center(
+            child: Text(
+              'Error: ${state.message}',
+              style: const TextStyle(color: AppColors.negative),
+            ),
+          );
+        }
+        if (state is PortfolioLoaded) {
+          if (state.loans.isEmpty) {
+            return const Center(
+              child: Text(
+                'Sin préstamos registrados',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
+            itemCount: state.loans.length,
+            itemBuilder: (context, i) => LoanCard(loan: state.loans[i]),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
