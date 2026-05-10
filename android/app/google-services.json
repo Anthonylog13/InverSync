@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "943067865641",
+    "project_id": "inver-sync",
+    "storage_bucket": "inver-sync.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:943067865641:android:9e734931030df02f3c3238",
+        "android_client_info": {
+          "package_name": "com.example.inver_sync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQOUFmpZCAuZByzHKrvLfk8i_JFAlhdOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

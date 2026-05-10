@@ -10,10 +10,13 @@ import 'screens/login/login_screen.dart';
 import 'screens/main_layout/main_layout_screen.dart';
 import 'services/firestore_service.dart';
 import 'services/auth_service.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Determinar la pantalla inicial según el estado de sesión y biometría
   final Widget home = await _resolveInitialScreen();

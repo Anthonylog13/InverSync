@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/portfolio/portfolio_bloc.dart';
@@ -32,7 +33,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bloc = context.read<PortfolioBloc>();
       if (bloc.state.runtimeType == PortfolioInitial) {
-        bloc.add(const LoadPortfolioData());
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) bloc.add(LoadPortfolioData(uid: uid));
       }
     });
   }
