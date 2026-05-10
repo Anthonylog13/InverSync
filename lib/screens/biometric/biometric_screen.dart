@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../main_layout/main_layout_screen.dart';
 
-class BiometricMockScreen extends StatefulWidget {
-  const BiometricMockScreen({super.key});
+class BiometricScreen extends StatefulWidget {
+  const BiometricScreen({super.key});
 
   @override
-  State<BiometricMockScreen> createState() => _BiometricMockScreenState();
+  State<BiometricScreen> createState() => _BiometricScreenState();
 }
 
-class _BiometricMockScreenState extends State<BiometricMockScreen>
+class _BiometricScreenState extends State<BiometricScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -51,7 +51,7 @@ class _BiometricMockScreenState extends State<BiometricMockScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              // Título superior
+            
               Text(
                 'Bienvenido de nuevo',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -64,7 +64,7 @@ class _BiometricMockScreenState extends State<BiometricMockScreen>
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const Spacer(),
-              // Ícono biométrico con animación de pulso
+             
               GestureDetector(
                 onTap: _onBiometricTap,
                 behavior: HitTestBehavior.opaque,
@@ -104,7 +104,7 @@ class _BiometricMockScreenState extends State<BiometricMockScreen>
                     ),
               ),
               const Spacer(),
-              // Opción secundaria
+             
               TextButton(
                 onPressed: _onBiometricTap,
                 child: const Text('Usar otra forma de acceso'),

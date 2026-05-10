@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../models/mock_portfolio_data.dart';
+import '../../models/asset_models.dart';
+import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class PhysicalTab extends StatelessWidget {
@@ -9,10 +11,16 @@ class PhysicalTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PortfolioProvider>();
+    if (provider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
-      itemCount: physicalAssets.length,
-      itemBuilder: (context, i) => PhysicalCard(asset: physicalAssets[i]),
+      itemCount: provider.physicals.length,
+      itemBuilder: (context, i) => PhysicalCard(asset: provider.physicals[i]),
     );
   }
 }

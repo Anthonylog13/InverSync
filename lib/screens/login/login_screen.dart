@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../biometric_mock/biometric_mock_screen.dart';
+import '../main_layout/main_layout_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -16,7 +16,7 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(flex: 2),
-              // Logo / ícono de marca
+            
               Container(
                 width: 80,
                 height: 80,
@@ -32,7 +32,7 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              // Título principal
+              
               Text(
                 'InverSync',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
@@ -41,22 +41,22 @@ class LoginScreen extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 8),
-              // Subtítulo
+              
               Text(
-                'Tracker de Portafolio',
+                'tu portafolio de inversión en un solo lugar',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                       fontSize: 15,
                     ),
               ),
               const Spacer(flex: 3),
-              // Botón Google
+              
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const BiometricMockScreen(),
+                      builder: (_) => const MainLayoutScreen(),
                     ),
                   );
                 },
@@ -79,9 +79,9 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Disclaimer legal
+             
               Text(
-                'Al continuar aceptas los Términos de Servicio\ny la Política de Privacidad.',
+                '',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppColors.textDisabled,
@@ -96,7 +96,6 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-/// Ícono de Google pintado con Canvas (sin dependencias externas).
 class _GoogleLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

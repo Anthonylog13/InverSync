@@ -73,16 +73,13 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Drawer
-// ---------------------------------------------------------------------------
 class _AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Column(
         children: [
-          // Header
+   
           UserAccountsDrawerHeader(
             decoration: const BoxDecoration(color: AppColors.surfaceVariant),
             accountName: const Text(
@@ -101,7 +98,6 @@ class _AppDrawer extends StatelessWidget {
               child: const Icon(Icons.person, color: AppColors.primary, size: 32),
             ),
           ),
-          // Opciones
           _DrawerItem(
             icon: Icons.person_outline_rounded,
             label: 'Mi Perfil',
@@ -164,9 +160,6 @@ class _DrawerItem extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Placeholder para pestañas no implementadas aún
-// ---------------------------------------------------------------------------
 class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.label});
 

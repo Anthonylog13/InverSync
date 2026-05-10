@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../models/asset_models.dart';
+import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class AddAssetSheet extends StatefulWidget {
@@ -12,9 +15,12 @@ class AddAssetSheet extends StatefulWidget {
 
 class _AddAssetSheetState extends State<AddAssetSheet> {
   String _assetType = 'Accion/Cripto';
-  final _field1Controller = TextEditingController();
-  final _field2Controller = TextEditingController();
+  final _field1Controller = TextEditingController(); 
+  final _field2Controller = TextEditingController(); 
+  final _rateController = TextEditingController();   
+  final _monthsController = TextEditingController(); 
   String _currency = 'COP';
+  bool _isSaving = false;
 
   static const _assetTypes = ['Accion/Cripto', 'Prestamo P2P', 'Bien Fisico'];
 
@@ -22,6 +28,8 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
   void dispose() {
     _field1Controller.dispose();
     _field2Controller.dispose();
+    _rateController.dispose();
+    _monthsController.dispose();
     super.dispose();
   }
 
@@ -58,6 +66,72 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     }
   }
 
+  dynamic _buildAsset() {
+    final f1 = _field1Controller.text.trim();
+    final f2 = double.tryParse(_field2Controller.text.trim()) ?? 0.0;
+    final monthlyRate = double.tryParse(_rateController.text.trim()) ?? 0.0;
+    final monthsElapsed = int.tryParse(_monthsController.text.trim()) ?? 0;
+    switch (_assetType) {
+      case 'Prestamo P2P':
+        return LoanAsset(
+          label: 'Prestamo $f1',
+          borrower: f1,
+          amount: f2,
+          monthlyRate: monthlyRate,
+          monthsElapsed: monthsElapsed,
+          iconKey: 'person_outline_rounded',
+        );
+      case 'Bien Fisico':
+        return PhysicalAsset(
+          name: f1,
+          category: 'General',
+          estimatedValue: f2,
+          acquisitionValue: f2,
+          iconKey: 'help_outline_rounded',
+        );
+      default:
+        return MarketAsset(
+          name: f1,
+          ticker: f1.toUpperCase(),
+          quantity: f2,
+          price: 0.0,
+          changePercent: 0.0,
+          iconKey: 'help_outline_rounded',
+          currency: _currency,
+        );
+    }
+  }
+
+
+  Future<void> _save() async {
+    if (_field1Controller.text.trim().isEmpty) return;
+    setState(() => _isSaving = true);
+    try {
+      final provider = context.read<PortfolioProvider>();
+      final asset = _buildAsset();
+      switch (_assetType) {
+        case 'Prestamo P2P':
+          await provider.addLoan(asset as LoanAsset);
+        case 'Bien Fisico':
+          await provider.addPhysical(asset as PhysicalAsset);
+        default:
+          await provider.addMarket(asset as MarketAsset);
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: AppColors.negative,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -71,7 +145,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
+        
           Center(
             child: Container(
               width: 40,
@@ -116,6 +190,32 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
             icon: Icons.numbers_rounded,
             keyboardType: TextInputType.number,
           ),
+          if (_assetType == 'Prestamo P2P') ...[  
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: SheetField(
+                    controller: _rateController,
+                    label: 'Tasa mensual (%)',
+                    hint: 'Ej. 2.0',
+                    icon: Icons.percent_rounded,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SheetField(
+                    controller: _monthsController,
+                    label: 'Meses transcurridos',
+                    hint: 'Ej. 3',
+                    icon: Icons.calendar_month_rounded,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 14),
           DropdownField(
             label: 'Moneda',
@@ -129,8 +229,17 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Guardar Activo'),
+              onPressed: _isSaving ? null : _save,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.background,
+                      ),
+                    )
+                  : const Text('Guardar Activo'),
             ),
           ),
         ],

@@ -114,9 +114,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers de UI
-// ---------------------------------------------------------------------------
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label});
 

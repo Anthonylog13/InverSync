@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
-/// Modelo de datos para cada sección del gráfico.
 class ChartSectionData {
   const ChartSectionData(this.label, this.percent, this.color);
 
@@ -72,7 +71,6 @@ class AssetDistributionChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Leyenda
           ...sections.map(
             (d) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),

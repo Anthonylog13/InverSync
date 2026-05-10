@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../providers/portfolio_provider.dart';
 import '../../widgets/portfolio/add_asset_sheet.dart';
 import '../../widgets/portfolio/loans_tab.dart';
 import '../../widgets/portfolio/markets_tab.dart';
@@ -22,6 +24,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PortfolioProvider>().loadAllData();
+    });
   }
 
   @override

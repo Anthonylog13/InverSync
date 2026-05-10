@@ -3,26 +3,24 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Fondo principal y superficies
+
   static const Color background = Color(0xFF121212);
   static const Color surface = Color(0xFF1E1E1E);
   static const Color surfaceVariant = Color(0xFF2A2A2A);
 
-  // Acento primario: verde neón
+
   static const Color primary = Color(0xFF00D05A);
   static const Color primaryDark = Color(0xFF009940);
 
-  // Textos
+
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFFB3B3B3);
   static const Color textDisabled = Color(0xFF5E5E5E);
 
-  // Semánticos
   static const Color positive = Color(0xFF00D05A);
   static const Color negative = Color(0xFFFF4D4D);
   static const Color warning = Color(0xFFFFC107);
 
-  // Bordes
   static const Color border = Color(0xFF2E2E2E);
 }
 
@@ -44,7 +42,7 @@ class AppTheme {
         onError: AppColors.textPrimary,
       ),
 
-      // AppBar sin elevación, fondo transparente
+  
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -58,7 +56,6 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
 
-      // Cards oscuras con bordes redondeados
       cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
@@ -69,7 +66,7 @@ class AppTheme {
         margin: const EdgeInsets.symmetric(vertical: 6),
       ),
 
-      // Botones principales: anchos, verdes, redondeados
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -87,7 +84,7 @@ class AppTheme {
         ),
       ),
 
-      // Botones de texto
+  
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
@@ -98,7 +95,7 @@ class AppTheme {
         ),
       ),
 
-      // BottomNavigationBar
+    
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
@@ -115,7 +112,7 @@ class AppTheme {
         ),
       ),
 
-      // Drawer
+    
       drawerTheme: const DrawerThemeData(
         backgroundColor: AppColors.surface,
         elevation: 0,
@@ -127,14 +124,14 @@ class AppTheme {
         ),
       ),
 
-      // Divisores
+  
       dividerTheme: const DividerThemeData(
         color: AppColors.border,
         thickness: 1,
         space: 1,
       ),
 
-      // Switch verde
+    
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return AppColors.primary;
@@ -148,7 +145,7 @@ class AppTheme {
         }),
       ),
 
-      // Tipografía base
+   
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: AppColors.textPrimary,

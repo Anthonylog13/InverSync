@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../models/mock_portfolio_data.dart';
+import '../../providers/portfolio_provider.dart';
 
 class PortfolioSummary extends StatelessWidget {
   const PortfolioSummary({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PortfolioProvider>();
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -21,11 +23,11 @@ class PortfolioSummary extends StatelessWidget {
         children: [
           SummaryItem(
             label: 'Activos',
-            value: '${marketAssets.length + physicalAssets.length}',
+            value: '${provider.markets.length + provider.physicals.length}',
           ),
           SummaryItem(
             label: 'Prestamos',
-            value: '${loanAssets.length}',
+            value: '${provider.loans.length}',
             valueColor: AppColors.warning,
           ),
           const SummaryItem(

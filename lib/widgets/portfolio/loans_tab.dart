@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../models/mock_portfolio_data.dart';
+import '../../models/asset_models.dart';
+import '../../providers/portfolio_provider.dart';
 import '../shared/portfolio_shared_widgets.dart';
 
 class LoansTab extends StatelessWidget {
@@ -9,10 +11,16 @@ class LoansTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<PortfolioProvider>();
+    if (provider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
-      itemCount: loanAssets.length,
-      itemBuilder: (context, i) => LoanCard(loan: loanAssets[i]),
+      itemCount: provider.loans.length,
+      itemBuilder: (context, i) => LoanCard(loan: provider.loans[i]),
     );
   }
 }
