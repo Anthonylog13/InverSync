@@ -4,12 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/portfolio/portfolio_bloc.dart';
 import '../../blocs/portfolio/portfolio_event.dart';
+import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import '../calendar/calendar_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../login/login_screen.dart';
 import '../movements/movements_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../portfolio/portfolio_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -33,10 +36,19 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      context.read<PortfolioBloc>().add(LoadPortfolioData(uid: uid));
-    }
+
+    // Usar addPostFrameCallback garantiza que el widget esté completamente
+    // insertado en el árbol antes de leer los providers del contexto.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Solicitar permisos de notificaciones la primera vez
+      context.read<NotificationService>().requestPermissions();
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        context.read<PortfolioBloc>().add(LoadPortfolioData(uid: uid));
+      }
+    });
   }
 
   @override
@@ -46,9 +58,29 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
       appBar: AppBar(
         title: Text(_appBarTitle),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+          BlocBuilder<PortfolioBloc, PortfolioState>(
+            builder: (context, state) {
+              final hasPending = state is PortfolioLoaded &&
+                  (state.loans.any((l) => l.paymentDay != null) ||
+                      state.physicals
+                          .any((p) => p.hasRent && p.rentPaymentDay != null));
+
+              return IconButton(
+                tooltip: 'Próximos cobros',
+                icon: Badge(
+                  isLabelVisible: hasPending,
+                  backgroundColor: AppColors.positive,
+                  smallSize: 8,
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

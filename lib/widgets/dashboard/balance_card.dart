@@ -10,6 +10,7 @@ class BalanceCard extends StatelessWidget {
     super.key,
     required this.totalBalance,
     required this.isCopCurrency,
+    required this.roiPercent,
   });
 
   /// Balance total en USD proveniente del estado [PortfolioLoaded].
@@ -17,6 +18,9 @@ class BalanceCard extends StatelessWidget {
 
   /// Si es true, el balance se muestra en COP; de lo contrario en USD.
   final bool isCopCurrency;
+
+  /// Rentabilidad global calculada por el BLoC.
+  final double roiPercent;
 
   static const double _usdToCop = 4200;
 
@@ -88,13 +92,23 @@ class BalanceCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.arrow_upward_rounded,
-                  color: AppColors.positive, size: 14),
+              Icon(
+                roiPercent >= 0
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded,
+                color: roiPercent >= 0
+                    ? AppColors.positive
+                    : AppColors.negative,
+                size: 14,
+              ),
               const SizedBox(width: 4),
               Text(
-                '+2.34%  hoy',
+                '${roiPercent >= 0 ? '+' : ''}'  
+                '${roiPercent.toStringAsFixed(2)}%  ROI total',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.positive,
+                      color: roiPercent >= 0
+                          ? AppColors.positive
+                          : AppColors.negative,
                       fontWeight: FontWeight.w600,
                     ),
               ),

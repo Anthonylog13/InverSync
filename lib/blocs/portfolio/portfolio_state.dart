@@ -26,6 +26,8 @@ final class PortfolioLoading extends PortfolioState {
 /// Las listas son inmutables (List.unmodifiable).
 /// [isCopCurrency] indica si la moneda base es COP (true) o USD (false).
 /// [totalBalance]  suma de todos los valores de activos expresada en USD.
+/// [totalInvested] capital total aportado por el usuario (suma de compras).
+/// [roiPercent]    rentabilidad global ((balance-invested)/invested)*100.
 final class PortfolioLoaded extends PortfolioState {
   PortfolioLoaded({
     required List<MarketAsset> markets,
@@ -33,11 +35,16 @@ final class PortfolioLoaded extends PortfolioState {
     required List<PhysicalAsset> physicals,
     List<Movement> movements = const [],
     this.isCopCurrency = true,
+    this.totalInvested = 0.0,
   })  : markets = List.unmodifiable(markets),
         loans = List.unmodifiable(loans),
         physicals = List.unmodifiable(physicals),
         movements = List.unmodifiable(movements),
-        totalBalance = _calcBalance(markets, loans, physicals);
+        totalBalance = _calcBalance(markets, loans, physicals),
+        roiPercent = _calcRoi(
+          _calcBalance(markets, loans, physicals),
+          totalInvested,
+        );
 
   final List<MarketAsset> markets;
   final List<LoanAsset> loans;
@@ -47,6 +54,12 @@ final class PortfolioLoaded extends PortfolioState {
 
   /// Suma de todos los valores de activos expresada en USD.
   final double totalBalance;
+
+  /// Capital total invertido / aportado por el usuario (en USD).
+  final double totalInvested;
+
+  /// Rentabilidad global en porcentaje.
+  final double roiPercent;
 
   static const double _usdToCop = 4200;
 
@@ -76,14 +89,22 @@ final class PortfolioLoaded extends PortfolioState {
     return total;
   }
 
+  /// Calcula el ROI: ((balance - invested) / invested) * 100.
+  /// Devuelve 0.0 si el capital invertido es cero (evita ÷0).
+  static double _calcRoi(double balance, double invested) {
+    if (invested == 0.0) return 0.0;
+    return ((balance - invested) / invested) * 100.0;
+  }
+
   /// Crea una copia del estado modificando sólo los campos especificados.
-  /// Recalcula [totalBalance] automáticamente.
+  /// Recalcula [totalBalance] y [roiPercent] automáticamente.
   PortfolioLoaded copyWith({
     List<MarketAsset>? markets,
     List<LoanAsset>? loans,
     List<PhysicalAsset>? physicals,
     List<Movement>? movements,
     bool? isCopCurrency,
+    double? totalInvested,
   }) {
     return PortfolioLoaded(
       markets: markets ?? this.markets,
@@ -91,12 +112,21 @@ final class PortfolioLoaded extends PortfolioState {
       physicals: physicals ?? this.physicals,
       movements: movements ?? this.movements,
       isCopCurrency: isCopCurrency ?? this.isCopCurrency,
+      totalInvested: totalInvested ?? this.totalInvested,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [markets, loans, physicals, movements, isCopCurrency, totalBalance];
+  List<Object?> get props => [
+        markets,
+        loans,
+        physicals,
+        movements,
+        isCopCurrency,
+        totalBalance,
+        totalInvested,
+        roiPercent,
+      ];
 }
 
 /// Error irrecuperable durante la carga de datos.

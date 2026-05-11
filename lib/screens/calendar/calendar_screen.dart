@@ -120,14 +120,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final eventMap = _buildEventMap(state);
         final selectedEvents = _eventsForDay(_selectedDay, eventMap);
 
-        return Column(
-          children: [
-            // ── Calendario ─────────────────────────────────────────────────
-            _buildCalendar(eventMap),
-            const Divider(height: 1, color: AppColors.border),
-            // ── Lista de eventos del día seleccionado ──────────────────────
-            Expanded(child: _buildEventList(selectedEvents)),
-          ],
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: Column(
+            children: [
+              // ── Calendario ───────────────────────────────────────────────
+              _buildCalendar(eventMap),
+              const Divider(height: 1, color: AppColors.border),
+              // ── Lista de eventos del día seleccionado ────────────────────
+              Expanded(child: _buildEventList(selectedEvents)),
+            ],
+          ),
         );
       },
     );
@@ -139,7 +142,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildCalendar(Map<DateTime, List<_CalendarEvent>> eventMap) {
     return TableCalendar<_CalendarEvent>(
-      locale: 'es_ES',
       firstDay: DateTime(2020),
       lastDay: DateTime(2100),
       focusedDay: _focusedDay,

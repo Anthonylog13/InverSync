@@ -57,6 +57,13 @@ dependencies:
   # HTTP (consumo mock API / Mockoon)
   http: ^1.2.2
 
+  # Localización (requerido por table_calendar con locale)
+  intl: ^0.19.0
+
+  # Notificaciones locales
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -42,6 +42,41 @@ class MarketDataService {
     return prices;
   }
 
+  /// Busca instrumentos financieros en Yahoo Finance dado un [query] libre.
+  ///
+  /// Retorna hasta 8 resultados con `symbol`, `shortname` y `exchange`.
+  /// En caso de error o sin resultados devuelve lista vacía.
+  Future<List<Map<String, String>>> searchTicker(String query) async {
+    try {
+      final uri = Uri.parse(
+        'https://query2.finance.yahoo.com/v1/finance/search'
+        '?q=${Uri.encodeComponent(query)}&quotesCount=8&newsCount=0',
+      );
+      final response = await _client
+          .get(uri, headers: {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 6));
+
+      if (response.statusCode != 200) return [];
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final quotes = body['quotes'] as List<dynamic>? ?? [];
+
+      return quotes
+          .whereType<Map<String, dynamic>>()
+          .where((q) => q['symbol'] != null)
+          .map((q) => {
+                'symbol': (q['symbol'] as String?) ?? '',
+                'shortname': (q['shortname'] as String?) ??
+                    (q['longname'] as String?) ??
+                    '',
+                'exchange': (q['exchange'] as String?) ?? '',
+              })
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   /// Traduce un ticker interno al símbolo que Yahoo Finance reconoce.
   ///
   /// Reglas:
@@ -53,9 +88,14 @@ class MarketDataService {
     // Ampliar según los activos que manejen los usuarios.
     const Map<String, String> _explicitMap = {
       'ECO.CB': 'EC',       // Ecopetrol → ADR en NYSE
+      'ECO.CL': 'EC',       // Ecopetrol BVC (sufijo .CL)
+      'ECO': 'EC',           // Ecopetrol sin sufijo
       'BCOL.CB': 'CIB',    // Bancolombia → ADR en NYSE
+      'BCOL': 'CIB',        // Bancolombia sin sufijo
       'ISA.CB': 'ISA.CN',  // ISA → Bolsa de Colombia en Yahoo
+      'ISA': 'ISA.CN',      // ISA sin sufijo
       'PFBCOLOM.CB': 'CIB', // Bancolombia pref. → mismo ADR
+      'PFBCOLOM': 'CIB',    // sin sufijo
       'BTC-USD': 'BTC-USD', // Bitcoin (sin cambio)
       'ETH-USD': 'ETH-USD', // Ethereum (sin cambio)
     };

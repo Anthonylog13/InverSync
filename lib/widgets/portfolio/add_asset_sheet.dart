@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../services/market_data_service.dart';
 import '../../blocs/portfolio/portfolio_event.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
@@ -26,6 +27,10 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
   String _currency = 'COP';
   bool _hasRent = false;
   bool _isSaving = false;
+  final _purchasePriceController = TextEditingController();
+  String? _selectedTicker;
+  String? _selectedTickerName;
+  TextEditingController? _autocompleteController;
 
   static const _assetTypes = ['Accion/Cripto', 'Prestamo P2P', 'Bien Fisico'];
 
@@ -37,6 +42,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     _monthsController.dispose();
     _paymentDayController.dispose();
     _rentDayController.dispose();
+    _purchasePriceController.dispose();
     super.dispose();
   }
 
@@ -102,11 +108,18 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           rentPaymentDay: _hasRent ? rentDay : null,
         ).toJson();
       default:
+        final tickerRaw = (_selectedTicker ??
+                _autocompleteController?.text.trim() ??
+                f1)
+            .toUpperCase();
+        final tickerName = _selectedTickerName ?? tickerRaw;
+        final purchasePrice =
+            double.tryParse(_purchasePriceController.text.trim()) ?? 0.0;
         return MarketAsset(
-          name: f1,
-          ticker: f1.toUpperCase(),
+          name: tickerName,
+          ticker: tickerRaw,
           quantity: f2,
-          price: 0.0,
+          price: purchasePrice,
           changePercent: 0.0,
           iconKey: 'help_outline_rounded',
           currency: _currency,
@@ -115,7 +128,12 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
   }
 
   Future<void> _save() async {
-    if (_field1Controller.text.trim().isEmpty) return;
+    final isMarket = _assetType == 'Accion/Cripto';
+    final hasName = isMarket
+        ? (_selectedTicker ?? _autocompleteController?.text.trim() ?? '')
+            .isNotEmpty
+        : _field1Controller.text.trim().isNotEmpty;
+    if (!hasName) return;
 
     setState(() => _isSaving = true);
 
@@ -147,9 +165,130 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     }
   }
 
+  // ── Autocomplete de tickers ──────────────────────────────────────────────
+
+  Widget _buildTickerAutocomplete(MarketDataService marketService) {
+    return Autocomplete<Map<String, String>>(
+      displayStringForOption: (option) => option['symbol'] ?? '',
+      optionsBuilder: (textValue) async {
+        final q = textValue.text.trim();
+        if (q.length < 3) return const [];
+        return marketService.searchTicker(q);
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        _autocompleteController = controller;
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 14),
+                child: Icon(Icons.search_rounded,
+                    color: AppColors.textSecondary, size: 20),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  style: const TextStyle(
+                      color: AppColors.textPrimary, fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: 'Busca por nombre o símbolo (ej. Apple)',
+                    hintStyle:
+                        TextStyle(color: AppColors.textDisabled, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    labelText: 'Ticker / Símbolo',
+                    labelStyle:
+                        TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                  ),
+                  onSubmitted: (_) => onFieldSubmitted(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(12),
+            elevation: 6,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 240),
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, color: AppColors.border),
+                itemBuilder: (context, i) {
+                  final opt = options.elementAt(i);
+                  return InkWell(
+                    onTap: () => onSelected(opt),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Text(
+                            opt['symbol'] ?? '',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              opt['shortname'] ?? '',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            opt['exchange'] ?? '',
+                            style: const TextStyle(
+                              color: AppColors.textDisabled,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+      onSelected: (option) {
+        setState(() {
+          _selectedTicker = option['symbol'];
+          _selectedTickerName = option['shortname'];
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final marketService = context.read<MarketDataService>();
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -188,15 +327,23 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
             icon: Icons.category_outlined,
             value: _assetType,
             items: _assetTypes,
-            onChanged: (v) => setState(() => _assetType = v ?? _assetType),
+            onChanged: (v) => setState(() {
+              _assetType = v ?? _assetType;
+              _selectedTicker = null;
+              _selectedTickerName = null;
+              _autocompleteController = null;
+            }),
           ),
           const SizedBox(height: 14),
-          SheetField(
-            controller: _field1Controller,
-            label: _field1Label,
-            hint: _field1Hint,
-            icon: Icons.label_outline_rounded,
-          ),
+          if (_assetType == 'Accion/Cripto')
+            _buildTickerAutocomplete(marketService)
+          else
+            SheetField(
+              controller: _field1Controller,
+              label: _field1Label,
+              hint: _field1Hint,
+              icon: Icons.label_outline_rounded,
+            ),
           const SizedBox(height: 14),
           SheetField(
             controller: _field2Controller,
@@ -205,6 +352,17 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
             icon: Icons.numbers_rounded,
             keyboardType: TextInputType.number,
           ),
+          if (_assetType == 'Accion/Cripto') ...[  
+            const SizedBox(height: 14),
+            SheetField(
+              controller: _purchasePriceController,
+              label: 'Precio de compra unitario',
+              hint: 'Ej. 12500.50',
+              icon: Icons.price_change_outlined,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
           if (_assetType == 'Prestamo P2P') ...[  
             const SizedBox(height: 14),
             Row(

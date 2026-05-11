@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'blocs/portfolio/portfolio_bloc.dart';
 import 'core/theme/app_theme.dart';
@@ -10,19 +11,25 @@ import 'screens/login/login_screen.dart';
 import 'screens/main_layout/main_layout_screen.dart';
 import 'services/firestore_service.dart';
 import 'services/market_data_service.dart';
+import 'services/notification_service.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('es_ES', null);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Inicializar notificaciones locales (crea el canal Android 8+)
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+
   // Determinar la pantalla inicial según el estado de sesión y biometría
   final Widget home = await _resolveInitialScreen();
 
-  runApp(InverSyncApp(home: home));
+  runApp(InverSyncApp(home: home, notificationService: notificationService));
 }
 
 /// Lógica de decisión de ruta inicial:
@@ -45,9 +52,14 @@ Future<Widget> _resolveInitialScreen() async {
 }
 
 class InverSyncApp extends StatelessWidget {
-  const InverSyncApp({super.key, required this.home});
+  const InverSyncApp({
+    super.key,
+    required this.home,
+    required this.notificationService,
+  });
 
   final Widget home;
+  final NotificationService notificationService;
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +67,13 @@ class InverSyncApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (_) => FirestoreService()),
         RepositoryProvider(create: (_) => MarketDataService()),
+        RepositoryProvider.value(value: notificationService),
       ],
       child: BlocProvider(
         create: (ctx) => PortfolioBloc(
           firestoreService: ctx.read<FirestoreService>(),
           marketDataService: ctx.read<MarketDataService>(),
+          notificationService: ctx.read<NotificationService>(),
         ),
         child: MaterialApp(
           title: 'InverSync',

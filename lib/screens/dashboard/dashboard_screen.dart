@@ -6,6 +6,7 @@ import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/dashboard/asset_distribution_chart.dart';
 import '../../widgets/dashboard/balance_card.dart';
+import '../../widgets/dashboard/portfolio_line_chart.dart';
 import '../../widgets/dashboard/sync_action_button.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -55,7 +56,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 BalanceCard(
                   totalBalance: state.totalBalance,
                   isCopCurrency: state.isCopCurrency,
+                  roiPercent: state.roiPercent,
                 ),
+                const SizedBox(height: 16),
+                PortfolioLineChart(movements: state.movements),
                 const SizedBox(height: 16),
                 SyncActionButton(onTap: () {}),
                 const SizedBox(height: 28),

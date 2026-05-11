@@ -84,10 +84,19 @@ class MarketCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: _tickerColor(asset.ticker),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(asset.icon, color: AppColors.primary, size: 22),
+            child: Center(
+              child: Text(
+                _tickerInitials(asset.ticker),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -138,6 +147,32 @@ class MarketCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // ── Avatar helpers ────────────────────────────────────────────────────────
+
+  static const _avatarColors = [
+    Color(0xFF1A3A5C), // azul marino
+    Color(0xFF4A235A), // morado oscuro
+    Color(0xFF7B3F00), // naranja quemado
+    Color(0xFF145A32), // verde esmeralda
+    Color(0xFF1B2631), // azul pizarra
+    Color(0xFF6E2C00), // caoba
+  ];
+
+  /// Extrae 1-2 iniciales del ticker descartando el sufijo tras el punto.
+  /// "ECOPETROL.CL" → "EC" | "BTC-USD" → "BT" | "AAPL" → "AA"
+  static String _tickerInitials(String ticker) {
+    final base = ticker.split('.').first.split('-').first;
+    return base.length >= 2
+        ? base.substring(0, 2).toUpperCase()
+        : base.toUpperCase();
+  }
+
+  /// Elige un color de [_avatarColors] de forma determinista según el ticker.
+  static Color _tickerColor(String ticker) {
+    final idx = ticker.hashCode.abs() % _avatarColors.length;
+    return _avatarColors[idx];
   }
 
   String _price(double p) {
