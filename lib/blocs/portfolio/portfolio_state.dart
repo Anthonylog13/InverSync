@@ -24,10 +24,11 @@ final class PortfolioLoading extends PortfolioState {
 /// Datos listos para mostrarse.
 ///
 /// Las listas son inmutables (List.unmodifiable).
-/// [isCopCurrency] indica si la moneda base es COP (true) o USD (false).
-/// [totalBalance]  suma de todos los valores de activos expresada en USD.
-/// [totalInvested] capital total aportado por el usuario (suma de compras).
-/// [roiPercent]    rentabilidad global ((balance-invested)/invested)*100.
+/// [isCopCurrency]        indica si la moneda base es COP (true) o USD (false).
+/// [totalBalance]         suma del valor actual de todos los activos en USD.
+/// [totalInvested]        capital total aportado (movimientos de tipo investment).
+/// [totalIncomeReceived]  ingresos totales cobrados (intereses + rentas + devoluciones).
+/// [roiPercent]           rentabilidad global = (balance + income - invested) / invested * 100.
 final class PortfolioLoaded extends PortfolioState {
   PortfolioLoaded({
     required List<MarketAsset> markets,
@@ -41,9 +42,11 @@ final class PortfolioLoaded extends PortfolioState {
         physicals = List.unmodifiable(physicals),
         movements = List.unmodifiable(movements),
         totalBalance = _calcBalance(markets, loans, physicals),
+        totalIncomeReceived = _calcIncome(movements),
         roiPercent = _calcRoi(
           _calcBalance(markets, loans, physicals),
           totalInvested,
+          _calcIncome(movements),
         );
 
   final List<MarketAsset> markets;
@@ -52,18 +55,24 @@ final class PortfolioLoaded extends PortfolioState {
   final List<Movement> movements;
   final bool isCopCurrency;
 
-  /// Suma de todos los valores de activos expresada en USD.
+  /// Valor de mercado actual de todos los activos en USD.
   final double totalBalance;
 
   /// Capital total invertido / aportado por el usuario (en USD).
   final double totalInvested;
 
+  /// Ingresos cobrados acumulados en USD (intereses, rentas, abonos recibidos).
+  final double totalIncomeReceived;
+
   /// Rentabilidad global en porcentaje.
+  /// Fórmula: (balance + ingresos - invertido) / invertido × 100.
   final double roiPercent;
 
   static const double _usdToCop = 4200;
 
-  /// Calcula el balance total en USD sumando las tres categorías.
+  /// Calcula el balance total en USD sumando el valor actual de cada categoría.
+  /// Usa [outstandingPrincipal] (no [amount]) para los préstamos: refleja el
+  /// capital pendiente real, no el monto original del préstamo.
   static double _calcBalance(
     List<MarketAsset> markets,
     List<LoanAsset> loans,
@@ -78,8 +87,9 @@ final class PortfolioLoaded extends PortfolioState {
       total += valueInUsd;
     }
 
+    // Usa outstandingPrincipal: a medida que se abona capital el balance baja.
     for (final l in loans) {
-      total += l.amount / _usdToCop;
+      total += l.outstandingPrincipal / _usdToCop;
     }
 
     for (final p in physicals) {
@@ -89,15 +99,28 @@ final class PortfolioLoaded extends PortfolioState {
     return total;
   }
 
-  /// Calcula el ROI: ((balance - invested) / invested) * 100.
-  /// Devuelve 0.0 si el capital invertido es cero (evita ÷0).
-  static double _calcRoi(double balance, double invested) {
+  /// Suma todos los ingresos recibidos (type == income) en USD.
+  /// Estos flujos de caja aumentan la rentabilidad real del portafolio.
+  static double _calcIncome(List<Movement> movements) {
+    double total = 0.0;
+    for (final m in movements) {
+      if (m.type == MovementType.income) {
+        total += m.currency == 'COP' ? m.amount / _usdToCop : m.amount;
+      }
+    }
+    return total;
+  }
+
+  /// ROI real: considera tanto la apreciación de activos como los ingresos cobrados.
+  /// ((balance + ingresos - invertido) / invertido) × 100.
+  /// Protege contra división por cero.
+  static double _calcRoi(double balance, double invested, double income) {
     if (invested == 0.0) return 0.0;
-    return ((balance - invested) / invested) * 100.0;
+    return ((balance + income - invested) / invested) * 100.0;
   }
 
   /// Crea una copia del estado modificando sólo los campos especificados.
-  /// Recalcula [totalBalance] y [roiPercent] automáticamente.
+  /// Recalcula [totalBalance], [totalIncomeReceived] y [roiPercent] automáticamente.
   PortfolioLoaded copyWith({
     List<MarketAsset>? markets,
     List<LoanAsset>? loans,
@@ -125,6 +148,7 @@ final class PortfolioLoaded extends PortfolioState {
         isCopCurrency,
         totalBalance,
         totalInvested,
+        totalIncomeReceived,
         roiPercent,
       ];
 }

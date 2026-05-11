@@ -31,6 +31,7 @@ class Movement {
     required this.date,
     required this.type,
     required this.currency,
+    this.assetId,
   });
 
   /// Identificador único del movimiento.
@@ -52,6 +53,10 @@ class Movement {
   /// 'COP' o 'USD'.
   final String currency;
 
+  /// ID del activo al que pertenece este movimiento.
+  /// Permite limpiar los movimientos cuando se elimina un activo.
+  final String? assetId;
+
   // ---------------------------------------------------------------------------
   // Serialización
   // ---------------------------------------------------------------------------
@@ -63,6 +68,7 @@ class Movement {
         date: DateTime.parse(json['date'] as String),
         type: MovementTypeX.fromString(json['type'] as String),
         currency: json['currency'] as String,
+        assetId: json['assetId'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -72,5 +78,6 @@ class Movement {
         'date': date.toIso8601String(),
         'type': type.value,
         'currency': currency,
+        if (assetId != null) 'assetId': assetId,
       };
 }

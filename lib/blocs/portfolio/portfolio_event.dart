@@ -67,3 +67,28 @@ final class DeleteAssetEvent extends PortfolioEvent {
   @override
   List<Object?> get props => [uid, collection, assetId];
 }
+
+/// Registra un pago sobre un préstamo (intereses o abono a capital).
+///
+/// [uid]         : UID del usuario autenticado.
+/// [loanId]      : ID del préstamo en Firestore.
+/// [amount]      : Monto pagado (en COP).
+/// [paymentType] : 'interest' para cobro de intereses, 'principal' para abono a capital.
+final class RegisterLoanPaymentEvent extends PortfolioEvent {
+  const RegisterLoanPaymentEvent({
+    required this.uid,
+    required this.loanId,
+    required this.amount,
+    required this.paymentType,
+  });
+
+  final String uid;
+  final String loanId;
+  final double amount;
+
+  /// 'interest' | 'principal'
+  final String paymentType;
+
+  @override
+  List<Object?> get props => [uid, loanId, amount, paymentType];
+}

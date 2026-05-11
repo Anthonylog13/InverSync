@@ -106,6 +106,8 @@ class LoanAsset {
     this.cuotas,
     double? outstandingPrincipal,
     this.paymentDay,
+    this.lastMovementDate,
+    this.interestAccrued = 0.0,
   }) : outstandingPrincipal = outstandingPrincipal ?? amount;
 
   /// Identificador del documento en Firestore.
@@ -126,7 +128,23 @@ class LoanAsset {
   /// Día del mes (1–31) en que se cobra la cuota. Nulo si no está definido.
   final int? paymentDay;
 
+  /// Fecha del último movimiento (pago) registrado.
+  /// Sirve como punto de partida para calcular el interés proporcional acumulado.
+  final DateTime? lastMovementDate;
+
+  /// Intereses devengados acumulados no pagados (en COP).
+  /// Se acumula con cada abono a capital; se reinicia cuando se pagan intereses.
+  final double interestAccrued;
+
   IconData get icon => IconMapper.fromString(iconKey);
+
+  /// Interés diario proporcional desde [lastMovementDate] hasta hoy.
+  double get currentAccruedInterest {
+    if (outstandingPrincipal <= 0 || monthlyRate <= 0) return 0.0;
+    final base = lastMovementDate ?? DateTime.now();
+    final days = DateTime.now().difference(base).inDays.clamp(0, 366);
+    return outstandingPrincipal * (monthlyRate / 100.0) * (days / 30.0);
+  }
 
   LoanAsset copyWith({
     String? id,
@@ -138,6 +156,8 @@ class LoanAsset {
     double? outstandingPrincipal,
     String? iconKey,
     int? paymentDay,
+    DateTime? lastMovementDate,
+    double? interestAccrued,
   }) =>
       LoanAsset(
         id: id ?? this.id,
@@ -149,6 +169,8 @@ class LoanAsset {
         outstandingPrincipal: outstandingPrincipal ?? this.outstandingPrincipal,
         iconKey: iconKey ?? this.iconKey,
         paymentDay: paymentDay ?? this.paymentDay,
+        lastMovementDate: lastMovementDate ?? this.lastMovementDate,
+        interestAccrued: interestAccrued ?? this.interestAccrued,
       );
 
   factory LoanAsset.fromJson(Map<String, dynamic> json) {
@@ -160,9 +182,15 @@ class LoanAsset {
       amount: amount,
       monthlyRate: (json['monthlyRate'] as num).toDouble(),
       cuotas: (json['cuotas'] as num?)?.toInt(),
-      outstandingPrincipal: (json['outstandingPrincipal'] as num?)?.toDouble() ?? amount,
+      outstandingPrincipal:
+          (json['outstandingPrincipal'] as num?)?.toDouble() ?? amount,
       iconKey: json['icon'] as String,
       paymentDay: (json['paymentDay'] as num?)?.toInt(),
+      lastMovementDate: json['lastMovementDate'] != null
+          ? DateTime.tryParse(json['lastMovementDate'] as String)
+          : null,
+      interestAccrued:
+          (json['interestAccrued'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -172,9 +200,12 @@ class LoanAsset {
         'amount': amount,
         'monthlyRate': monthlyRate,
         'outstandingPrincipal': outstandingPrincipal,
+        'interestAccrued': interestAccrued,
         'icon': iconKey,
         if (cuotas != null) 'cuotas': cuotas,
         if (paymentDay != null) 'paymentDay': paymentDay,
+        if (lastMovementDate != null)
+          'lastMovementDate': lastMovementDate!.toIso8601String(),
       };
 }
 

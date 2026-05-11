@@ -18,7 +18,10 @@ class NotificationService {
     'payment_reminders',
     'Recordatorios de pago',
     description: 'Notificaciones de cobros y pagos próximos de InverSync',
-    importance: Importance.high,
+    importance: Importance.max,     // heads-up en pantalla bloqueada
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
   );
 
   // ---------------------------------------------------------------------------
@@ -59,15 +62,27 @@ class NotificationService {
   /// Solicita permisos al usuario (iOS y Android 13+).
   /// En Android < 13 esto es no-op.
   Future<void> requestPermissions() async {
+    // iOS: solicita los tres permisos explícitamente
     await _plugin
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+        ?.requestPermissions(
+          alert: true,   // muestra banners y notificaciones en pantalla de bloqueo
+          badge: true,   // badge numérico en el ícono de la app
+          sound: true,   // reproduce el sonido de notificación
+        );
 
+    // Android 13+ (API 33+): permiso POST_NOTIFICATIONS obligatorio
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+
+    // Android 12+ (API 31+): permiso de alarmas exactas
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestExactAlarmsPermission();
   }
 
   // ---------------------------------------------------------------------------
@@ -106,9 +121,12 @@ class NotificationService {
       'Recordatorios de pago',
       channelDescription:
           'Notificaciones de cobros y pagos próximos de InverSync',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,   // muestra heads-up aunque la pantalla esté apagada
+      priority: Priority.max,
       icon: '@mipmap/ic_launcher',
+      playSound: true,
+      enableVibration: true,
+      fullScreenIntent: true,       // salta incluso en pantalla de bloqueo
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -117,16 +135,34 @@ class NotificationService {
       presentSound: true,
     );
 
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tzDate,
-      const NotificationDetails(android: androidDetails, iOS: iosDetails),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-    );
+    // Intento 1: alarma exacta (requiere SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM).
+    // Intento 2: si el permiso no fue concedido en tiempo de ejecución,
+    //            cae en alarma inexacta — la notificación se mostrará con algo
+    //            de retraso pero no crashea la app.
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzDate,
+        const NotificationDetails(android: androidDetails, iOS: iosDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      // Fallback: alarma inexacta — no requiere permiso especial.
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzDate,
+        const NotificationDetails(android: androidDetails, iOS: iosDetails),
+        androidScheduleMode: AndroidScheduleMode.inexact,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------

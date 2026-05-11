@@ -103,7 +103,7 @@ class AssetDistributionChart extends StatelessWidget {
                   },
                 ),
                 borderData: FlBorderData(show: false),
-                sectionsSpace: 3,
+                sectionsSpace: 0,
                 centerSpaceRadius: 52,
                 sections: List.generate(sections.length, (i) {
                   final isTouched = i == touchedIndex;
@@ -113,6 +113,7 @@ class AssetDistributionChart extends StatelessWidget {
                     value: s.percent,
                     title: '${s.percent.toStringAsFixed(1)}%',
                     radius: isTouched ? 72 : 60,
+                    borderSide: const BorderSide(width: 0, color: Colors.transparent),
                     titleStyle: TextStyle(
                       fontSize: isTouched ? 14 : 12,
                       fontWeight: FontWeight.w700,

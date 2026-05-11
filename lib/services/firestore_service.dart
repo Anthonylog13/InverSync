@@ -28,8 +28,11 @@ class FirestoreService {
   Future<List<Map<String, dynamic>>> _getDocs(
       String uid, String collection) async {
     final snapshot = await _col(uid, collection).get();
+    // El ID del documento de Firestore siempre gana sobre cualquier campo 'id'
+    // almacenado en los datos. Esto garantiza que las eliminaciones por ID
+    // funcionen tanto para datos nuevos como para datos legados.
     return snapshot.docs
-        .map((doc) => {'id': doc.id, ...doc.data()})
+        .map((doc) => {...doc.data(), 'id': doc.id})
         .toList();
   }
 
@@ -57,23 +60,42 @@ class FirestoreService {
   // Escrituras
   // ---------------------------------------------------------------------------
 
-  /// Agrega un nuevo activo en la subcolección [collectionPath] del usuario.
+  /// Agrega un nuevo activo en la subcolección [collectionPath] del usuario
+  /// y retorna el ID del documento creado en Firestore.
   ///
   /// [collectionPath] debe ser: 'markets', 'loans' o 'physicals'.
-  Future<void> saveAsset(
+  Future<String> saveAsset(
     String uid,
     String collectionPath,
     Map<String, dynamic> data,
   ) async {
-    await _col(uid, collectionPath).add(data);
+    final ref = await _col(uid, collectionPath).add(data);
+    return ref.id;
   }
 
   /// Agrega un nuevo movimiento en la subcolección `movements` del usuario.
+  /// Usa el campo 'id' del [data] como ID del documento para garantizar
+  /// que las eliminaciones posteriores por ID funcionen correctamente.
   Future<void> saveMovement(
     String uid,
     Map<String, dynamic> data,
   ) async {
-    await _col(uid, 'movements').add(data);
+    final customId = data['id'] as String?;
+    if (customId != null && customId.isNotEmpty) {
+      await _col(uid, 'movements').doc(customId).set(data);
+    } else {
+      await _col(uid, 'movements').add(data);
+    }
+  }
+
+  /// Actualiza campos específicos de un activo existente.
+  Future<void> updateAsset(
+    String uid,
+    String collection,
+    String docId,
+    Map<String, dynamic> data,
+  ) async {
+    await _col(uid, collection).doc(docId).update(data);
   }
 
   /// Elimina un documento de la subcolección indicada.
@@ -85,5 +107,10 @@ class FirestoreService {
     String docId,
   ) async {
     await _col(uid, collection).doc(docId).delete();
+  }
+
+  /// Elimina un movimiento del historial por su ID.
+  Future<void> deleteMovement(String uid, String movId) async {
+    await _col(uid, 'movements').doc(movId).delete();
   }
 }
