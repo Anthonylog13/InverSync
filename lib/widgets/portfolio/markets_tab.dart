@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
 import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
@@ -39,8 +41,27 @@ class MarketsTab extends StatelessWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
             itemCount: state.markets.length,
-            itemBuilder: (context, i) =>
-                MarketCard(asset: state.markets[i], isCopCurrency: state.isCopCurrency),
+            itemBuilder: (context, i) {
+              final asset = state.markets[i];
+              final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+              // Capturar el bloc antes del Dismissible para evitar
+              // referencias a un contexto ya desmontado en onDismissed.
+              final bloc = context.read<PortfolioBloc>();
+              return Dismissible(
+                key: ValueKey(asset.id),
+                direction: DismissDirection.endToStart,
+                background: _DeleteBackground(),
+                onDismissed: (_) => bloc.add(
+                  DeleteAssetEvent(
+                    uid: uid,
+                    collection: 'markets',
+                    assetId: asset.id,
+                  ),
+                ),
+                child: MarketCard(
+                    asset: asset, isCopCurrency: state.isCopCurrency),
+              );
+            },
           );
         }
         return const SizedBox.shrink();
@@ -186,4 +207,22 @@ class MarketCard extends StatelessWidget {
 
   String _qty(double q) =>
       q == q.truncate() ? q.toInt().toString() : q.toStringAsFixed(4);
+}
+
+/// Fondo rojo de borrar visible al deslizar de derecha a izquierda.
+class _DeleteBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.negative,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      child: const Icon(Icons.delete_outline_rounded,
+          color: Colors.white, size: 26),
+    );
+  }
 }

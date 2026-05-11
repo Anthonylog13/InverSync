@@ -70,8 +70,8 @@ class AssetDistributionChart extends StatelessWidget {
       _Section('Bienes Físicos', _physicalsTotal / totalBalance * 100, _colorBienes),
     ];
 
-    // Filtra categorías vacías para no dibujar sectores 0%
-    return raw.where((s) => s.percent > 0.5).toList();
+    // Filtra categorías sin valor para no dibujar sectores vacíos
+    return raw.where((s) => s.percent > 0).toList();
   }
 
   @override

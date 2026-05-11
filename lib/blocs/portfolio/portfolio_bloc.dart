@@ -26,6 +26,7 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
         super(const PortfolioInitial()) {
     on<LoadPortfolioData>(_onLoad);
     on<AddAssetEvent>(_onAddAsset);
+    on<DeleteAssetEvent>(_onDeleteAsset);
     on<ToggleCurrencyEvent>(_onToggleCurrency);
   }
 
@@ -272,5 +273,44 @@ class PortfolioBloc extends Bloc<PortfolioEvent, PortfolioState> {
     if (current is! PortfolioLoaded) return;
 
     emit(current.copyWith(isCopCurrency: !current.isCopCurrency));
+  }
+
+  /// Optimistic Delete: elimina el activo del estado local de inmediato y
+  /// luego dispara el borrado en Firestore en segundo plano.
+  Future<void> _onDeleteAsset(
+    DeleteAssetEvent event,
+    Emitter<PortfolioState> emit,
+  ) async {
+    final current = state;
+    if (current is! PortfolioLoaded) return;
+
+    // Actualizar el estado local antes de esperar la red (optimistic).
+    final newState = switch (event.collection) {
+      'markets' => current.copyWith(
+          markets: current.markets
+              .where((a) => a.id != event.assetId)
+              .toList(),
+        ),
+      'loans' => current.copyWith(
+          loans: current.loans
+              .where((a) => a.id != event.assetId)
+              .toList(),
+        ),
+      'physicals' => current.copyWith(
+          physicals: current.physicals
+              .where((a) => a.id != event.assetId)
+              .toList(),
+        ),
+      _ => current,
+    };
+
+    emit(newState);
+
+    // Persistir el borrado en Firestore de forma asíncrona.
+    unawaited(
+      _firestore
+          .deleteAsset(event.uid, event.collection, event.assetId)
+          .catchError((e) => addError(e)),
+    );
   }
 }

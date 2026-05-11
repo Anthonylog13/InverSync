@@ -47,3 +47,23 @@ final class AddAssetEvent extends PortfolioEvent {
 final class ToggleCurrencyEvent extends PortfolioEvent {
   const ToggleCurrencyEvent();
 }
+
+/// Solicita eliminar un activo del portafolio.
+///
+/// [uid]        : UID del usuario autenticado.
+/// [collection] : Nombre de la subcolección en Firestore ('markets', 'loans', 'physicals').
+/// [assetId]    : Identificador del documento a eliminar.
+final class DeleteAssetEvent extends PortfolioEvent {
+  const DeleteAssetEvent({
+    required this.uid,
+    required this.collection,
+    required this.assetId,
+  });
+
+  final String uid;
+  final String collection;
+  final String assetId;
+
+  @override
+  List<Object?> get props => [uid, collection, assetId];
+}

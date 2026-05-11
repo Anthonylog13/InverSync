@@ -21,9 +21,10 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
   final _field1Controller = TextEditingController();
   final _field2Controller = TextEditingController();
   final _rateController = TextEditingController();
-  final _monthsController = TextEditingController();
+  final _cuotasController = TextEditingController();
   final _paymentDayController = TextEditingController();
   final _rentDayController = TextEditingController();
+  final _rentAmountController = TextEditingController();
   String _currency = 'COP';
   bool _hasRent = false;
   bool _isSaving = false;
@@ -39,9 +40,10 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     _field1Controller.dispose();
     _field2Controller.dispose();
     _rateController.dispose();
-    _monthsController.dispose();
+    _cuotasController.dispose();
     _paymentDayController.dispose();
     _rentDayController.dispose();
+    _rentAmountController.dispose();
     _purchasePriceController.dispose();
     super.dispose();
   }
@@ -83,9 +85,10 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
     final f1 = _field1Controller.text.trim();
     final f2 = double.tryParse(_field2Controller.text.trim()) ?? 0.0;
     final monthlyRate = double.tryParse(_rateController.text.trim()) ?? 0.0;
-    final monthsElapsed = int.tryParse(_monthsController.text.trim()) ?? 0;
+    final cuotas = int.tryParse(_cuotasController.text.trim());
     final paymentDay = int.tryParse(_paymentDayController.text.trim());
     final rentDay = int.tryParse(_rentDayController.text.trim());
+    final rentAmount = double.tryParse(_rentAmountController.text.trim());
     switch (_assetType) {
       case 'Prestamo P2P':
         return LoanAsset(
@@ -93,7 +96,8 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           borrower: f1,
           amount: f2,
           monthlyRate: monthlyRate,
-          monthsElapsed: monthsElapsed,
+          cuotas: cuotas,
+          outstandingPrincipal: f2,
           iconKey: 'person_outline_rounded',
           paymentDay: paymentDay,
         ).toJson();
@@ -106,6 +110,7 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
           iconKey: 'help_outline_rounded',
           hasRent: _hasRent,
           rentPaymentDay: _hasRent ? rentDay : null,
+          rentAmount: _hasRent ? rentAmount : null,
         ).toJson();
       default:
         final tickerRaw = (_selectedTicker ??
@@ -379,9 +384,9 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: SheetField(
-                    controller: _monthsController,
-                    label: 'Meses transcurridos',
-                    hint: 'Ej. 3',
+                    controller: _cuotasController,
+                    label: 'Cuotas (Opcional)',
+                    hint: 'Ej. 12',
                     icon: Icons.calendar_month_rounded,
                     keyboardType: TextInputType.number,
                   ),
@@ -403,17 +408,36 @@ class _AddAssetSheetState extends State<AddAssetSheet> {
               value: _hasRent,
               onChanged: (v) => setState(() {
                 _hasRent = v;
-                if (!v) _rentDayController.clear();
+                if (!v) {
+                  _rentDayController.clear();
+                  _rentAmountController.clear();
+                }
               }),
             ),
             if (_hasRent) ...[  
               const SizedBox(height: 14),
-              SheetField(
-                controller: _rentDayController,
-                label: 'Día de cobro arriendo (1-31)',
-                hint: 'Ej. 5',
-                icon: Icons.event_available_rounded,
-                keyboardType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: SheetField(
+                      controller: _rentDayController,
+                      label: 'Día de cobro (1-31)',
+                      hint: 'Ej. 5',
+                      icon: Icons.event_available_rounded,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SheetField(
+                      controller: _rentAmountController,
+                      label: 'Valor arriendo mensual',
+                      hint: 'Ej. 800000',
+                      icon: Icons.payments_outlined,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],

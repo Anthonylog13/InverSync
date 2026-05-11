@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/portfolio/portfolio_bloc.dart';
+import '../../blocs/portfolio/portfolio_event.dart';
 import '../../blocs/portfolio/portfolio_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/asset_models.dart';
@@ -39,7 +41,24 @@ class LoansTab extends StatelessWidget {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 88),
             itemCount: state.loans.length,
-            itemBuilder: (context, i) => LoanCard(loan: state.loans[i]),
+            itemBuilder: (context, i) {
+              final loan = state.loans[i];
+              final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+              final bloc = context.read<PortfolioBloc>();
+              return Dismissible(
+                key: ValueKey(loan.id),
+                direction: DismissDirection.endToStart,
+                background: _DeleteBackground(),
+                onDismissed: (_) => bloc.add(
+                  DeleteAssetEvent(
+                    uid: uid,
+                    collection: 'loans',
+                    assetId: loan.id,
+                  ),
+                ),
+                child: LoanCard(loan: loan),
+              );
+            },
           );
         }
         return const SizedBox.shrink();
@@ -49,15 +68,14 @@ class LoansTab extends StatelessWidget {
 }
 
 class LoanCard extends StatelessWidget {
-  const LoanCard({super.key, required this.loan});
+  LoanCard({super.key, required this.loan});
 
   final LoanAsset loan;
 
   @override
   Widget build(BuildContext context) {
-    final accrued =
-        loan.amount * (loan.monthlyRate / 100) * loan.monthsElapsed;
-    final total = loan.amount + accrued;
+    // Usa outstandingPrincipal para mostrar el capital pendiente real.
+    final principal = loan.outstandingPrincipal;
     final hasInterest = loan.monthlyRate > 0;
 
     return Container(
@@ -96,9 +114,12 @@ class LoanCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Text('${loan.monthsElapsed} mes(es)',
-                        style: const TextStyle(
-                            color: AppColors.textDisabled, fontSize: 11)),
+                    Text(
+                      loan.cuotas != null
+                          ? '${loan.cuotas} cuotas'
+                          : 'Sin plazo fijo',
+                      style: const TextStyle(
+                          color: AppColors.textDisabled, fontSize: 11)),
                     const SizedBox(width: 6),
                     if (hasInterest)
                       AssetBadge(
@@ -115,16 +136,17 @@ class LoanCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('\$ ${_fmt(total)} COP',
+              Text('\$ ${_fmt(principal)} COP',
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600)),
               if (hasInterest) ...[
                 const SizedBox(height: 3),
-                Text('+\$ ${_fmt(accrued)} int.',
-                    style: const TextStyle(
-                        color: AppColors.warning, fontSize: 11)),
+                Text(
+                  '${loan.monthlyRate.toStringAsFixed(1)}% /mes',
+                  style: const TextStyle(
+                      color: AppColors.warning, fontSize: 11)),
               ],
             ],
           ),
@@ -136,4 +158,22 @@ class LoanCard extends StatelessWidget {
   String _fmt(double v) => v
       .toStringAsFixed(0)
       .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
+}
+
+/// Fondo rojo de borrar visible al deslizar de derecha a izquierda.
+class _DeleteBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.negative,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      child: const Icon(Icons.delete_outline_rounded,
+          color: Colors.white, size: 26),
+    );
+  }
 }

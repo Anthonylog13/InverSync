@@ -75,4 +75,15 @@ class FirestoreService {
   ) async {
     await _col(uid, 'movements').add(data);
   }
+
+  /// Elimina un documento de la subcolección indicada.
+  ///
+  /// [collection] debe ser: 'markets', 'loans' o 'physicals'.
+  Future<void> deleteAsset(
+    String uid,
+    String collection,
+    String docId,
+  ) async {
+    await _col(uid, collection).doc(docId).delete();
+  }
 }

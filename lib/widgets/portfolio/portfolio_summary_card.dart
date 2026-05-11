@@ -15,6 +15,10 @@ class PortfolioSummary extends StatelessWidget {
         final markets = state is PortfolioLoaded ? state.markets.length : 0;
         final physicals = state is PortfolioLoaded ? state.physicals.length : 0;
         final loans = state is PortfolioLoaded ? state.loans.length : 0;
+        final roi = state is PortfolioLoaded ? state.roiPercent : 0.0;
+        final roiColor = roi >= 0 ? AppColors.positive : AppColors.negative;
+        final roiLabel =
+            '${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(2)}%';
 
         return Container(
           margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -32,14 +36,14 @@ class PortfolioSummary extends StatelessWidget {
                 value: '${markets + physicals}',
               ),
               SummaryItem(
-                label: 'Prestamos',
+                label: 'Préstamos',
                 value: '$loans',
                 valueColor: AppColors.warning,
               ),
-              const SummaryItem(
+              SummaryItem(
                 label: 'Rentabilidad',
-                value: '+8.43%',
-                valueColor: AppColors.positive,
+                value: roiLabel,
+                valueColor: roiColor,
               ),
             ],
           ),
