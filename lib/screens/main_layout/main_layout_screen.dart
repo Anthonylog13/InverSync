@@ -60,16 +60,15 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         actions: [
           BlocBuilder<PortfolioBloc, PortfolioState>(
             builder: (context, state) {
-              final hasPending = state is PortfolioLoaded &&
-                  (state.loans.any((l) => l.paymentDay != null) ||
-                      state.physicals
-                          .any((p) => p.hasRent && p.rentPaymentDay != null));
+              // Badge solo si hay eventos con urgencia ≤ 3 días.
+              final hasAlerts = state is PortfolioLoaded &&
+                  NotificationsScreen.hasUrgentAlerts(state);
 
               return IconButton(
-                tooltip: 'Próximos cobros',
+                tooltip: 'Centro de alertas',
                 icon: Badge(
-                  isLabelVisible: hasPending,
-                  backgroundColor: AppColors.positive,
+                  isLabelVisible: hasAlerts,
+                  backgroundColor: AppColors.negative,
                   smallSize: 8,
                   child: const Icon(Icons.notifications_outlined),
                 ),
